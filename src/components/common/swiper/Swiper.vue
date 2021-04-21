@@ -1,10 +1,15 @@
 <template>
   <div id="hy-swiper">
-    <div class="swiper">
+    <div class="swiper" @touchstart="touchStart" @touchmove="touchMove" @touchend="touchEnd">
       <slot></slot>
     </div>
-
-    <div class="indicator"></div>
+    <slot name="indicator">
+    </slot>
+    <div class="indicator">
+      <slot name="indicator" v-if="showIndicator && slideCount>1">
+        <div v-for="(item, index) in slideCount" class="indi-item" :class="{active: index === currentIndex-1}" :key="index"></div>
+      </slot>
+    </div>
   </div>
 </template>
 
@@ -14,19 +19,19 @@ export default {
   props: {
     interval: {
       type: Number,
-      default: 3000,
+      default: 3000
     },
     animDuration: {
       type: Number,
-      default: 300,
+      default: 300
     },
     moveRatio: {
       type: Number,
-      default: 0.25,
+      default: 0.25
     },
     showIndicator: {
       type: Boolean,
-      default: true,
+      default: true
     },
   },
   data: function () {
@@ -54,8 +59,8 @@ export default {
     startTimer: function () {
       this.playTimer = window.setInterval(() => {
         this.currentIndex++;
-        this.scrollContent(-this.currentIndex * this.totalWidth)
-      }, this.interval)
+        this.scrollContent(-this.currentIndex * this.totalWidth);
+      }, this.interval);
     },
     stopTimer: function () {
       window.clearInterval(this.playTimer);
@@ -69,7 +74,7 @@ export default {
       this.scrolling = true;
 
       // 1.开始滚动动画
-      this.swiperStyle.transition = "transform" + this.animDuration + "ms";
+      this.swiperStyle.transition = 'transform ' + this.animDuration + 'ms';
       this.setTransform(currentPosition);
 
       // 2.判断滚动到的位置
@@ -132,41 +137,108 @@ export default {
       // 4.让swiper元素显示第一个（目前是显示前面添加的最后一个元素）
       this.setTransform(-this.totalWidth);
     },
+    /**
+     * 拖动事件处理
+     */
+    touchStart: function (e) {
+      // 1.如果正在滚动，不可以拖动
+      if (this.scrolling) return;
+
+      // 2.停止计时器
+      this.stopTimer();
+
+      // 3.保存开始滚动的位置
+      this.startX = e.touches[0].pageX;
+    },
+
+    touchMove: function (e) {
+      // 1.计算用户拖动的距离
+      this.currentX = e.touches[0].pageX;
+      this.distance = this.currentX - this.startX;
+      let currentPosition = -this.currentIndex * this.totalWidth;
+      let moveDistance = this.distance + currentPosition;
+
+      // 2.设置当前的位置
+      this.setTransform(moveDistance);
+    },
+
+    touchEnd: function (e) {
+      // 1.获取移动的距离
+      let currentMove = Math.abs(this.distance);
+
+      // 2.判断最终的距离
+      if (this.distance === 0) {
+        return;
+      } else if (this.distance > 0 && currentMove > this.totalWidth * this.moveRatio) {
+        this.currentIndex--;
+      } else if (this.distance < 0 && currentMove > this.totalWidth * this.moveRatio) {
+        this.currentIndex++;
+      };
+
+      // 3.移动到正确的位置
+      this.scrollContent(-this.currentIndex * this.totalWidth);
+
+      // 4.移动完成后重新开启定时器
+      this.startTimer();
+    },
+
+    /**
+     * 控制上一个, 下一个
+     */
+    previous: function () {
+      this.changeItem(-1);
+    },
+
+    next: function () {
+      this.changeItem(1);
+    },
+
+    changeItem: function (num) {
+      // 1.移除定时器
+      this.stopTimer();
+
+      // 2.修改index和位置
+      this.currentIndex += num;
+      this.scrollContent(-this.currentIndex * this.totalWidth);
+
+      // 3.添加定时器
+      this.startTimer();
+    },
   },
 };
 </script>
 
 <style scoped>
-#hy-swiper {
-  overflow: hidden;
-  position: relative;
-}
+  #hy-swiper {
+    overflow: hidden;
+    position: relative;
+  }
 
-.swiper {
-  display: flex;
-}
+  .swiper {
+    display: flex;
+  }
 
-.indicator {
-  display: flex;
-  justify-content: center;
-  position: absolute;
-  width: 100%;
-  bottom: 8px;
-}
+  .indicator {
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    width: 100%;
+    bottom: 8px;
+  }
 
-.indi-item {
-  box-sizing: border-box;
-  width: 8px;
-  height: 8px;
-  border-radius: 4px;
-  background-color: #fff;
-  line-height: 8px;
-  text-align: center;
-  font-size: 12px;
-  margin: 0 5px;
-}
+  .indi-item {
+    box-sizing: border-box;
+    width: 8px;
+    height: 8px;
+    border-radius: 4px;
+    background-color: #fff;
+    line-height: 8px;
+    text-align: center;
+    font-size: 12px;
+    margin: 0 5px;
+  }
 
-.indi-item.active {
-  background-color: rgba(212, 62, 46, 1);
-}
+  .indi-item.active {
+    background-color: rgba(212, 62, 46, 1.0);
+  }
 </style>
