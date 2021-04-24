@@ -20,10 +20,10 @@
         type: Boolean,
         default: false
       },
-      observeDom:{
-        type: Boolean,
-        default: false
-      }
+      // observeDom:{
+      //   type: Boolean,
+      //   default: false
+      // }
     },
     data() {
       return {
@@ -36,9 +36,9 @@
         click: true,  // 控制div元素点击
         mouseWheel: true,
         probeType: this.probeType,
-        observeDOM: this.observeDom,
         pullUpLoad: this.pullUpLoad,
-        observeImage: true
+        // observeDOM: this.observeDom,
+        // observeImage: true
       });
 
       // 2.监听滚动位置
@@ -53,10 +53,14 @@
     },
     methods: {
       scrollTo(x, y, time=300) {
-        this.scroll.scrollTo(x, y, time);
+        this.scroll && this.scroll.scrollTo(x, y, time);
       },
       finishPullUp() {
         this.scroll.finishPullUp();
+      },
+      refresh() {
+        console.log('----');
+        this.scroll && this.scroll.refresh();
       }
     }
   }

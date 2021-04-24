@@ -9,8 +9,7 @@
             @scroll="contentScroll" 
             @pullingUp="loadMore"
             :probe-type="3" 
-            :pull-up-load="true"
-            :observe-dom="true">
+            :pull-up-load="true">
       <home-swiper :banner="banner"/>
       <home-recommend-view :recommend="recommend"/>
       <home-feature-view/>
@@ -69,6 +68,13 @@ export default {
     this.getHomeGoods('new');
     this.getHomeGoods('sell');
   },
+  mounted() {
+    // 图片加载完成后刷新scroll
+    const refresh = this.debounce(this.$refs.scroll.refresh);   // 防抖
+    this.$bus.$on('itemImageLoad', () => {
+      refresh(); 
+    });
+  },
   computed: {
     showGoods() {
       return this.goods[this.currentType].list
@@ -78,6 +84,15 @@ export default {
     /**
      * 事件请求相关的方法
      */
+    debounce(fun, delay=50) {
+      let timer = null;
+      return function (...args) {
+        if(timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          fun.apply(this, args)
+        }, delay);
+      };
+    },
     tabClick(index) {
       switch (index) {
         case 0:
