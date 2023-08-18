@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 
 // 测试git
+// ceshi
 Vue.config.productionTip = false
 
 Vue.prototype.$bus = new Vue();
